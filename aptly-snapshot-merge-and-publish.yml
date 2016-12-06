@@ -1,0 +1,21 @@
+- name: Publish Aptly Mirror
+  become_user: aptly
+  become: True
+  become_method: sudo
+  hosts: localhost
+  tasks:
+    - assert:
+        that: 
+          openstack_release is defined
+        msg: You need to define what you are releasing!
+    - shell: "aptly snapshot list -raw | grep slushie-{{ ansible_distribution_release }}-{{ openstack_release }} {% if aptly_dont_merge_snapshot_list is defined and aptly_dont_merge_snapshot_list | length > 0 %}|grep -v -e {{ aptly_dont_merge_snapshot_list | join(' -e ') }} {% endif %}"
+      register: aptly_selected_snapshot_list
+    - name: Merge the snapshots together
+      shell: "aptly snapshot merge slushie-{{ ansible_distribution_release }}-{{ openstack_release }} {{ aptly_selected_snapshot_list.stdout_lines | join(' ') }}"
+      tags:
+        - aptly_snapshot_merge
+        - aptly_snapshot
+    - name: Publish snapshot into public folder
+      shell: 'aptly publish snapshot -distribution="{{ ansible_distribution_release }}" slushie-{{ ansible_distribution_release }}-{{ openstack_release }}'
+      tags:
+        - aptly_publish

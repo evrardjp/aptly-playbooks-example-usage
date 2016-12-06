@@ -1,0 +1,24 @@
+- name: Publish Aptly Mirror
+  become_user: aptly
+  become: True
+  become_method: sudo
+  hosts: localhost
+  tasks:
+    - assert:
+        that: 
+          openstack_release is defined
+        msg: You need to define what you are releasing!
+    - shell: "aptly {{ item }} list -raw | grep -e {{ ansible_distribution_release }} -e ALL"
+      with_items:
+        - repo
+        - mirror
+      register: aptly_repo_list
+    - name: Froze the mirrors/repos by snapshot creation
+      shell: "aptly snapshot create slushie-{{ ansible_distribution_release }}-{{ openstack_release }}-{{ item.1 }} from {{ item.0.item }} {{ item.1 }}"
+      with_subelements:
+        - "{{ aptly_repo_list.results }}"
+        - "stdout_lines"
+    - shell: "aptly snapshot list -raw | grep slushie-{{ ansible_distribution_release }}-{{ openstack_release }}"
+      register: aptly_snapshot_list
+    - debug:
+        msg: "Full list of snapshots for this distribution/openstack_release: {{ aptly_snapshot_list.stdout_lines }}"
