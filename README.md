@@ -1,5 +1,9 @@
 # Aptly usage
 
+## Initial work to do
+
+Aptly needs pgp keys. The requirements (generation of keys) are listed in aptly-snapshot-create.yml .
+
 ## How to use this on a regular basis
 
 1. Git clone the aptly role in the proper folder, branch rax.
@@ -21,3 +25,5 @@ git clone https://github.com/evrardjp/ansible-role-aptly.git -b rax infOpen.aptl
 ansible-playbook -e openstack_release=whatever (or openstack-ansible) aptly-snapshot-merge-and-publish.yml -e @skip_list.yml
 
 The skip_list file basically contain the variable: aptly_dont_merge_snapshot_list, and the content is the list of snapshots to not merge.
+
+1. This will publish into aptly home folder public/ . This can then be rsynced.
